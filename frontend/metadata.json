@@ -1,0 +1,5 @@
+{
+  "name": "FleetSpy",
+  "description": "High-performance fleet management and real-time tracking dashboard with geofencing and automated alerts.",
+  "requestFramePermissions": ["geolocation"]
+}
