@@ -4,7 +4,11 @@ import { Card, Button, Input } from '@/src/components/ui/TacticalUI';
 import { Search, Download, Calendar, ShieldAlert, Zap, Filter } from 'lucide-react';
 
 export const Violations = () => {
-  const { data: violations = [], isLoading: loading } = useGetViolationHistoryQuery({});
+  const { data: allViolations = [], isLoading: loading } = useGetViolationHistoryQuery({});
+  // const violations = allViolations.filter((v: any) => v.type === 'GEOFENCE' || v.type === 'GEOFENCE_EXIT' || v.type === 'GEOFENCE_ENTER');
+  const violations = allViolations.filter((v) =>
+    ['GEOFENCE_EXIT', 'GEOFENCE_ENTER', 'GEOFENCE'].includes(v.type),
+  );
 
   if (loading) {
     return (
@@ -28,54 +32,9 @@ export const Violations = () => {
             Audit log of all security breaches, operational violations, and containment failures.
           </p>
         </div>
-        
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-red-50 border-red-200">
-          <div className="flex items-center gap-3 text-red-600 mb-2">
-            <ShieldAlert className="w-5 h-5" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">
-              Critical Breaches
-            </span>
-          </div>
-          <h3 className="text-3xl font-display">{violations.length}</h3>
-          <p className="text-xs text-red-600/70 mt-1">Last 24 hours</p>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3 text-primary mb-2">
-            <Zap className="w-5 h-5" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">
-              Speed Violations
-            </span>
-          </div>
-          <h3 className="text-3xl font-display">0</h3>
-          <p className="text-xs text-outline mt-1">Last 24 hours</p>
-        </Card>
-        <Card>
-          <div className="flex items-center gap-3 text-outline mb-2">
-            <Calendar className="w-5 h-5" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Total Incidents</span>
-          </div>
-          <h3 className="text-3xl font-display">156</h3>
-          <p className="text-xs text-outline mt-1">Current month</p>
-        </Card>
-      </div>
-
       <Card>
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" />
-            <Input placeholder="Filter by Asset ID or Zone..." className="pl-12" />
-          </div>
-          <div className="flex gap-2">
-            <Input type="date" className="w-auto" />
-            <Button variant="ghost">
-              <Filter className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-
         <div className="space-y-4">
           {violations.map((v) => (
             <div
@@ -99,21 +58,8 @@ export const Violations = () => {
                   </span>
                 </div>
               </div>
-              <Button variant="outline" size="sm" className="text-[10px]">
-                View Details
-              </Button>
             </div>
           ))}
-        </div>
-
-        <div className="mt-8 pt-8 border-t border-outline-variant flex justify-between items-center text-[10px] font-bold text-outline uppercase tracking-widest">
-          <span>Showing {violations.length} of 156 incidents</span>
-          <div className="flex gap-4">
-            <button className="hover:text-on-surface disabled:opacity-30" disabled>
-              Previous
-            </button>
-            <button className="hover:text-on-surface">Next</button>
-          </div>
         </div>
       </Card>
     </div>

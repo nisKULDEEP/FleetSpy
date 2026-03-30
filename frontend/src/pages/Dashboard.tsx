@@ -7,15 +7,6 @@ import { useGetViolationHistoryQuery } from '../services/api/violationsApi';
 import { Card, Button } from '@/src/components/ui/TacticalUI';
 import DashboardMap from '@/src/components/ui/DashboardMap';
 import { Truck, MapPin, AlertTriangle, Activity } from 'lucide-react';
-import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-} from 'recharts';
 
 const chartData = [
   { name: '00:00', value: 0 },
@@ -135,152 +126,49 @@ export const Dashboard = () => {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <StatCard
-          icon={Truck}
-          label="Fleet Utilization"
-          value={`${Math.round((stats.vehicles / 30) * 100)}%`}
-          trend={0}
-          color="bg-primary-container"
-        />
-        <StatCard
-          icon={MapPin}
-          label="Active Missions"
-          value={stats.vehicles}
-          trend={0}
-          color="bg-surface-container-highest"
-        />
-        <StatCard
-          icon={AlertTriangle}
-          label="Critical Alerts"
-          value={stats.alerts.toString().padStart(2, '0')}
-          trend={20}
-          color="bg-red-100"
-        />
-        <StatCard
-          icon={Activity}
-          label="Avg Throughput"
-          value="1.2k"
-          trend={8}
-          color="bg-emerald-100"
-        />
+      
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 mt-4 lg:grid-cols-4 gap-6">
+        <StatCard icon={Truck} label="Total Vehicles" value={stats.vehicles} trend={0} color="bg-blue-500/10 text-blue-500" />
+        <StatCard icon={MapPin} label="Total Geofences" value={stats.geofences} trend={0} color="bg-emerald-500/10 text-emerald-500" />
+        <StatCard icon={AlertTriangle} label="Total Alert Rules" value={stats.alerts} trend={0} color="bg-amber-500/10 text-amber-500" />
+        <StatCard icon={Activity} label="Total Violations" value={stats.violations} trend={0} color="bg-rose-500/10 text-rose-500" />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <Card
-          className="lg:col-span-2"
-          title="Fleet Activity"
-          subtitle="Real-time movement tracking (24h)"
-        >
-          <div className="h-[300px] w-full mt-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#FFD700" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#FFD700" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e2e2" />
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: '#7e775f', fontWeight: 600 }}
-                />
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10, fill: '#7e775f', fontWeight: 600 }}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#111',
-                    border: 'none',
-                    borderRadius: '0',
-                    color: '#fff',
-                  }}
-                  itemStyle={{ color: '#FFD700' }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#705d00"
-                  strokeWidth={3}
-                  fillOpacity={1}
-                  fill="url(#colorValue)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 h-[500px] rounded-lg overflow-hidden border border-outline/20 relative group">
+          <div className="absolute inset-0 z-10 pointer-events-none border border-primary/20 rounded-lg" />
+          <DashboardMap units={activeUnits} />
+        </div>
 
-        <Card title="Recent Alerts" subtitle="Mission critical notifications">
-          <div className="space-y-4 mt-4">
-            {recentAlerts.length > 0 ? (
-              recentAlerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className="border-l-2 border-outline-variant pl-4 py-2 hover:bg-surface-container-low transition-colors cursor-pointer"
-                >
-                  <div className="flex justify-between items-start">
-                    <span className="text-[10px] font-bold text-red-600 tracking-widest uppercase">
-                      VIOLATION
-                    </span>
-                    <span className="text-[10px] font-semibold text-outline">
-                      {new Date(alert.timestamp).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                  </div>
-                  <p className="font-display text-sm mt-1">{alert.vehicle_id}</p>
-                  <p className="text-xs text-outline mt-1 leading-relaxed">{alert.details}</p>
-                </div>
-              ))
-            ) : (
-              <p className="text-xs text-outline italic">No recent alerts detected.</p>
-            )}
-            <Button variant="ghost" className="w-full text-[10px] mt-4">
-              View All Alerts
-            </Button>
-          </div>
-        </Card>
+        <div className="space-y-6">
+          <Card className="p-6">
+            <h3 className="text-lg font-display tracking-wide mb-2">FleetSpy Platform</h3>
+            <p className="text-sm text-outline/80 leading-relaxed mb-4">
+              Advanced real-time fleet tracking, geofencing, and automated alert monitoring platform. Build strict supervision over mission critical assets with fast updates and boundary enforcement.
+            </p>
+          </Card>
+          
+          <Card className="p-6">
+            <h3 className="text-lg font-display tracking-wide mb-2">Platform Features</h3>
+            <ul className="space-y-3 mt-4">
+              <li className="flex items-start gap-2 text-sm text-outline/80">
+                 <div className="mt-1 min-w-[6px] h-1.5 w-1.5 rounded-full bg-primary" /> Real-time geographic positions on Tactical Map.
+              </li>
+              <li className="flex items-start gap-2 text-sm text-outline/80">
+                 <div className="mt-1 min-w-[6px] h-1.5 w-1.5 rounded-full bg-primary" /> Define custom boundaries and safe-zones mapping.
+              </li>
+              <li className="flex items-start gap-2 text-sm text-outline/80">
+                 <div className="mt-1 min-w-[6px] h-1.5 w-1.5 rounded-full bg-primary" /> Immutable event trails for audits and compliance.
+              </li>
+              <li className="flex items-start gap-2 text-sm text-outline/80">
+                 <div className="mt-1 min-w-[6px] h-1.5 w-1.5 rounded-full bg-primary" /> Manage operational asset inventory instantly.
+              </li>
+            </ul>
+          </Card>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <Card title="Active Units" subtitle="Live status monitoring">
-          <div className="space-y-2 mt-4 max-h-[400px] overflow-y-auto pr-2">
-            {activeUnits.map((unit) => (
-              <div
-                key={unit.id}
-                className="flex items-center justify-between p-4 bg-surface-container-low hover:bg-surface-container-highest transition-colors cursor-pointer"
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={cn(
-                      'w-1 h-8',
-                      unit.status === 'In Transit' ? 'bg-emerald-500' : 'bg-primary-container',
-                    )}
-                  />
-                  <div>
-                    <p className="font-display text-sm">{unit.vehicle_number}</p>
-                    <p className="text-[10px] font-semibold text-outline uppercase">
-                      {unit.status} / {unit.speed} km/h
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card title="Tactical Map" subtitle="Sector 7 grid visualization">
-          <div className="h-[400px] w-full mt-4 bg-surface-container-low relative overflow-hidden group">
-            <DashboardMap units={activeUnits} />
-          </div>
-        </Card>
-      </div>
     </div>
   );
 };

@@ -7,7 +7,7 @@ export const Alerts = () => {
   const { data: alerts = [], isLoading: loading } = useGetAlertsQuery({});
   const [configureAlerts] = useConfigureAlertsMutation();
   const [formData, setFormData] = useState({
-    type: 'SPEED_LIMIT',
+    type: 'GEOFENCE',
     threshold: 80,
     vehicle_id: '',
   });
@@ -133,12 +133,12 @@ export const Alerts = () => {
               {alerts.map((rule) => (
                 <div
                   key={rule.id}
-                  className={`bg-surface p-6 tactical-shadow border-l-4 h-48 flex flex-col justify-between group hover:bg-surface-container-low transition-colors ${rule.type === 'SPEED_LIMIT' ? 'border-primary-container' : 'border-red-600'}`}
+                  className={`bg-surface p-6 tactical-shadow border-l-4 h-48 flex flex-col justify-between group hover:bg-surface-container-low transition-colors ${rule.type === 'GEOFENCE' ? 'border-primary-container' : 'border-red-600'}`}
                 >
                   <div className="flex justify-between items-start">
                     <div>
                       <span
-                        className={`text-[10px] font-black uppercase tracking-widest block mb-1 ${rule.type === 'SPEED_LIMIT' ? 'text-primary' : 'text-red-600'}`}
+                        className={`text-[10px] font-black uppercase tracking-widest block mb-1 ${rule.type === 'GEOFENCE' ? 'text-primary' : 'text-red-600'}`}
                       >
                         {rule.type}
                       </span>
@@ -186,7 +186,7 @@ export const Alerts = () => {
                     },
                     {
                       time: '13:58:44.82',
-                      rule: 'SPEED_VIOL_X',
+                      rule: 'GEOFENCE_X',
                       asset: 'VT-441-OMEGA',
                       status: 'SUPPRESSED',
                       color: 'bg-outline',

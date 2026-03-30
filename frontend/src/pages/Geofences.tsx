@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { useGetGeofencesQuery, useCreateGeofenceMutation } from '../services/api/geofencesApi';
+import { useGetGeofencesQuery, useCreateGeofenceMutation, useDeleteGeofenceMutation } from '../services/api/geofencesApi';
 import { Card, Button, Input } from '@/src/components/ui/TacticalUI';
 import MapComponent from '@/src/components/ui/MapComponent';
-import { Plus, Info, Layers, Crosshair } from 'lucide-react';
+import { Plus, Info, Layers, Crosshair, Trash2 } from 'lucide-react';
 
 export const Geofences = () => {
   const { data: geofences = [], isLoading: loading } = useGetGeofencesQuery();
   const [createGeofence] = useCreateGeofenceMutation();
+  const [deleteGeofence] = useDeleteGeofenceMutation();
   const [formData, setFormData] = useState({
     name: '',
     category: 'General',
@@ -79,11 +80,16 @@ export const Geofences = () => {
                 >
                   <div className="flex justify-between items-start">
                     <h4 className="font-display text-sm">{geo.name}</h4>
-                    <span
-                      className={`text-[10px] font-black px-2 py-0.5 tracking-widest uppercase ${geo.category === 'Restricted' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}
-                    >
-                      {geo.category === 'Restricted' ? 'Warning' : 'Active'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`text-[10px] font-black px-2 py-0.5 tracking-widest uppercase ${geo.category === 'Restricted' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}
+                      >
+                        {geo.category === 'Restricted' ? 'Warning' : 'Active'}
+                      </span>
+                      <button onClick={(e) => { e.stopPropagation(); deleteGeofence(geo.id); }} className="text-red-500 hover:text-red-400 p-0.5" title="Delete Zone">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                   <p className="text-xs text-outline mt-1">
                     {geo.description || 'Sector monitoring zone'}
@@ -102,33 +108,17 @@ export const Geofences = () => {
           <Card title="Precision Controls" subtitle="Manual coordinate entry">
             <div className="space-y-4 mt-4">
               <Input
-                label="Latitude"
-                value={formData.coordinates[1]}
+                label="Zone Name"
+                placeholder="Sector Alpha"
+                value={formData.name}
                 onChange={(e) =>
                   setFormData({
                     ...formData,
-                    coordinates: [formData.coordinates[0], parseFloat(e.target.value)],
+                    name: e.target.value,
                   })
                 }
-              />
-              <Input
-                label="Longitude"
-                value={formData.coordinates[0]}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    coordinates: [parseFloat(e.target.value), formData.coordinates[1]],
-                  })
-                }
-              />
-              <Input
-                label="Radius (M)"
-                value={formData.radius}
-                type="number"
-                onChange={(e) => setFormData({ ...formData, radius: parseInt(e.target.value) })}
               />
               <div className="pt-4 flex justify-end">
-                
                 <Button variant="secondary" className="text-[10px]" onClick={handleCreateZone}>
                   Apply Changes
                 </Button>

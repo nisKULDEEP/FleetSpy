@@ -26,7 +26,9 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const user_id = req.user.id;
-    const result = await db.query('SELECT * FROM vehicles WHERE user_id = $1 ORDER BY id DESC', [user_id]);
+    const result = await db.query(`
+      SELECT v.*, (SELECT ST_Y(geom::geometry) as lat FROM vehicle_locations vl WHERE vl.vehicle_id = v.id ORDER BY timestamp DESC LIMIT 1), (SELECT ST_X(geom::geometry) as lng FROM vehicle_locations vl WHERE vl.vehicle_id = v.id ORDER BY timestamp DESC LIMIT 1) FROM vehicles v WHERE v.user_id = $1 ORDER BY v.id DESC
+    `, [user_id]);
     const mapped = result.rows.map(v => ({
       id: `veh_${v.id}`,
       vehicle_number: v.vehicle_number,
@@ -34,7 +36,8 @@ router.get('/', async (req, res) => {
       vehicle_type: v.vehicle_type,
       phone: v.phone,
       status: v.status,
-      created_at: v.created_at
+      created_at: v.created_at,
+      location: v.lat && v.lng ? { latitude: v.lat, longitude: v.lng } : null
     }));
     res.json({
       vehicles: mapped,
