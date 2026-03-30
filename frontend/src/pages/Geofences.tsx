@@ -1,46 +1,107 @@
+/* eslint-disable prettier/prettier */
 import React, { useState } from 'react';
-import {
-  useGetGeofencesQuery,
-  useCreateGeofenceMutation,
-  useDeleteGeofenceMutation,
-} from '../services/api/geofencesApi';
+import { Trash2 } from 'lucide-react';
 import { Card, Button, Input } from '@/src/components/ui/TacticalUI';
 import MapComponent from '@/src/components/ui/MapComponent';
-import { Plus, Trash2 } from 'lucide-react';
+import {
+  useCreateGeofenceMutation,
+  useDeleteGeofenceMutation,
+  useGetGeofencesQuery,
+} from '../services/api/geofencesApi';
 
+const CATEGORY_OPTIONS = [
+  { label: 'All', value: 'all' },
+  { label: 'Delivery Zone', value: 'delivery_zone' },
+  { label: 'Restricted Zone', value: 'restricted_zone' },
+  { label: 'Toll Zone', value: 'toll_zone' },
+  { label: 'Customer Area', value: 'customer_area' },
+];
+
+const MANUAL_CATEGORY_OPTIONS = CATEGORY_OPTIONS.filter((option) => option.value !== 'all');
+
+const CATEGORY_LABELS: Record<string, string> = {
+  delivery_zone: 'Delivery Zone',
+  restricted_zone: 'Restricted Zone',
+  toll_zone: 'Toll Zone',
+  customer_area: 'Customer Area',
+};
+
+const formatCategoryLabel = (value?: string) => {
+  if (!value) return 'General';
+  return CATEGORY_LABELS[value] || value.replace(/_/g, ' ');
+};
+
+const DEFAULT_CENTER: [number, number] = [12.9629, 77.5775];
+const DEFAULT_CATEGORY = 'delivery_zone';
+
+type DraftZone = {
+  id: string;
+  coordinates: [number, number][];
+  name: string;
+  category: string;
+  description: string;
+  saving?: boolean;
+};
 export const Geofences = () => {
-  const { data: geofences = [], isLoading: loading } = useGetGeofencesQuery();
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [draftZones, setDraftZones] = useState<DraftZone[]>([]);
+  const [expandedCoordinates, setExpandedCoordinates] = useState<Record<string, boolean>>({});
   const [createGeofence] = useCreateGeofenceMutation();
   const [deleteGeofence] = useDeleteGeofenceMutation();
-  const [formData, setFormData] = useState({
-    name: '',
-    category: 'General',
-    coordinates: [13.4, 52.52],
-    radius: 500,
-  });
+  const categoryParam = categoryFilter === 'all' ? undefined : categoryFilter;
+  const { data: geofences = [], isLoading: loading } = useGetGeofencesQuery(categoryParam);
 
-  const handleCreateZone = async () => {
+  const handleDeleteZone = async (id: string) => {
     try {
-      const lat = formData.coordinates[1];
-      const lng = formData.coordinates[0];
-      const d = formData.radius / 111320; // rough degree approx
-
-      const payload = {
-        name: formData.name || `Zone ${Math.floor(Math.random() * 1000)}`,
-        category: formData.category,
-        description: `Center: ${lat}, ${lng}, Rad: ${formData.radius}m`,
-        coordinates: [
-          [lat - d, lng - d],
-          [lat + d, lng - d],
-          [lat + d, lng + d],
-          [lat - d, lng + d],
-          [lat - d, lng - d], // Close polygon
-        ],
-      };
-
-      await createGeofence(payload).unwrap();
+      await deleteGeofence(id).unwrap();
     } catch (error) {
-      console.error('Failed to create geofence:', error);
+      console.error('Failed to delete geofence:', error);
+    }
+  };
+
+  const handleShapeCreated = (coordinates: [number, number][]) => {
+    if (!coordinates.length) return;
+    setDraftZones((prev) => [
+      ...prev,
+      {
+        id: crypto.randomUUID?.() || `${Date.now()}-${prev.length}`,
+        coordinates,
+        name: '',
+        category: DEFAULT_CATEGORY,
+        description: '',
+      },
+    ]);
+  };
+
+  const updateDraft = (id: string, field: keyof DraftZone, value: string) => {
+    setDraftZones((prev) =>
+      prev.map((draft) => (draft.id === id ? { ...draft, [field]: value } : draft)),
+    );
+  };
+
+  const removeDraft = (id: string) => {
+    setDraftZones((prev) => prev.filter((draft) => draft.id !== id));
+  };
+
+  const saveDraft = async (id: string) => {
+    const draft = draftZones.find((zone) => zone.id === id);
+    if (!draft) return;
+    setDraftZones((prev) =>
+      prev.map((zone) => (zone.id === id ? { ...zone, saving: true } : zone)),
+    );
+    try {
+      await createGeofence({
+        name: draft.name.trim() || `Zone ${draft.id.slice(-4)}`,
+        description: draft.description || 'Manual drawing',
+        category: draft.category,
+        coordinates: draft.coordinates,
+      }).unwrap();
+      removeDraft(id);
+    } catch (error) {
+      console.error('Failed to save drafted zone', error);
+      setDraftZones((prev) =>
+        prev.map((zone) => (zone.id === id ? { ...zone, saving: false } : zone)),
+      );
     }
   };
 
@@ -66,91 +127,198 @@ export const Geofences = () => {
             Define tactical boundaries and containment protocols for automated fleet monitoring.
           </p>
         </div>
-        <Button variant="secondary" onClick={handleCreateZone} className="flex items-center gap-2">
-          <Plus className="w-4 h-4" />
-          Create Zone
-        </Button>
       </header>
 
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
         <div className="xl:col-span-4 space-y-6">
           <Card title="Active Zones" subtitle="Current containment protocols">
-            <div className="space-y-3 mt-4">
-              {geofences.map((geo) => (
-                <div
-                  key={geo.id}
-                  className="p-4 bg-surface-container-low border-l-4 border-primary-container hover:bg-surface-container-highest transition-colors cursor-pointer group"
+            <div className="flex flex-wrap gap-2 mt-3">
+              {CATEGORY_OPTIONS.map((option) => (
+                <Button
+                  key={option.value}
+                  variant={categoryFilter === option.value ? 'primary' : 'outline'}
+                  size="sm"
+                  onClick={() => setCategoryFilter(option.value)}
                 >
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-display text-sm">{geo.name}</h4>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`text-[10px] font-black px-2 py-0.5 tracking-widest uppercase ${geo.category === 'Restricted' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}
-                      >
-                        {geo.category === 'Restricted' ? 'Warning' : 'Active'}
-                      </span>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteGeofence(geo.id);
-                        }}
-                        className="text-red-500 hover:text-red-400 p-0.5"
-                        title="Delete Zone"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                  <p className="text-xs text-outline mt-1">
-                    {geo.description || 'Sector monitoring zone'}
-                  </p>
-                  <div className="flex justify-between items-center mt-4">
-                    <span className="text-[10px] font-bold text-outline uppercase tracking-widest">
-                      {geo.category}
-                    </span>
-                  </div>
-                </div>
+                  {option.label}
+                </Button>
               ))}
             </div>
-          </Card>
-
-          <Card title="Precision Controls" subtitle="Manual coordinate entry">
-            <div className="space-y-4 mt-4">
-              <Input
-                label="Zone Name"
-                placeholder="Sector Alpha"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    name: e.target.value,
-                  })
-                }
-              />
-              <div className="pt-4 flex justify-end">
-                <Button variant="secondary" className="text-[10px]" onClick={handleCreateZone}>
-                  Apply Changes
-                </Button>
-              </div>
+            <div className="space-y-3 mt-4">
+              {geofences.length === 0 && (
+                <p className="text-xs text-outline">
+                  No geofences found. Draw a zone on the map to start.
+                </p>
+              )}
+              {geofences.map((geo: any) => {
+                const isRestricted = geo.category?.toLowerCase().includes('restrict');
+                const showCoords = expandedCoordinates[geo.id];
+                const coords = geo.coordinates ?? [];
+                const sanitizedCoords =
+                  coords.length &&
+                  coords[0][0] === coords[coords.length - 1][0] &&
+                  coords[0][1] === coords[coords.length - 1][1]
+                    ? coords.slice(0, -1)
+                    : coords;
+                return (
+                  <div
+                    key={geo.id}
+                    className="p-4 bg-surface-container-low border-l-4 border-primary-container hover:bg-surface-container-highest transition-colors cursor-pointer group"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-display text-sm">{geo.name}</h4>
+                        <p className="text-[10px] text-outline uppercase tracking-[0.3em] mt-1">
+                          {formatCategoryLabel(geo.category)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={`text-[10px] font-black px-2 py-0.5 tracking-widest uppercase ${
+                            isRestricted
+                              ? 'bg-red-100 text-red-600'
+                              : 'bg-emerald-100 text-emerald-600'
+                          }`}
+                        >
+                          {isRestricted ? 'Warning' : 'Active'}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteZone(geo.id);
+                          }}
+                          className="text-red-500 hover:text-red-400 p-0.5"
+                          title="Delete Zone"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-outline mt-2">
+                      {geo.description || 'No description provided'}
+                    </p>
+                    {geo.created_at && (
+                      <p className="text-[10px] text-outline mt-1">
+                        Created {new Date(geo.created_at).toLocaleString()}
+                      </p>
+                    )}
+                    <div className="mt-2 flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedCoordinates((prev) => ({
+                            ...prev,
+                            [geo.id]: !prev[geo.id],
+                          }));
+                        }}
+                        className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary"
+                      >
+                        {showCoords ? 'Hide coordinates' : 'Show coordinates'}
+                      </button>
+                      {showCoords && sanitizedCoords.length === 0 && (
+                        <span className="text-[10px] text-outline">No coordinates yet</span>
+                      )}
+                    </div>
+                    {showCoords && sanitizedCoords.length > 0 && (
+                      <div className="mt-2 space-y-1 text-[10px] font-mono text-outline">
+                        {sanitizedCoords.map((coord: [number, number], idx: number) => (
+                          <p key={`${geo.id}-${idx}`}>
+                            Point {idx + 1}: {coord[0].toFixed(6)}, {coord[1].toFixed(6)}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </Card>
         </div>
 
-        <div className="xl:col-span-8">
-          <Card className="p-0 overflow-hidden h-full min-h-[600px] flex flex-col">
-            <div className="flex-1 relative bg-surface-container-low h-full min-h-[400px]">
-              <MapComponent
-            geofences={geofences}
-            onShapeCreated={async (coords) => {
-              await createGeofence({
-                name: formData.name || ('Custom ' + Math.floor(Math.random()*1000)),
-                category: formData.category,
-                coordinates: coords,
-                description: 'Geoman map region',
-              });
-            }}
-          />
+        <div className="xl:col-span-8 space-y-6">
+          <Card title="Operational Map" subtitle="Draw or inspect zones">
+            <div className="text-[10px] text-outline tracking-[0.2em] uppercase pt-4">
+              Draw a polygon to start a new zone draft. Each shape opens its own form below.
             </div>
+            <div className="h-[420px] overflow-hidden rounded-sm mt-3">
+              <MapComponent
+                center={DEFAULT_CENTER}
+                geofences={geofences}
+                onShapeCreated={handleShapeCreated}
+              />
+            </div>
+            <p className="text-xs text-outline uppercase tracking-[0.3em] mt-3">
+              Drag the map tools to sketch new polygons that will automatically snap into the
+              registry.
+            </p>
+            {draftZones.length > 0 && (
+              <div className="mt-6 space-y-4">
+                {draftZones.map((draft, index) => (
+                  <Card key={draft.id} className="bg-surface-container-low">
+                    <div className="flex flex-wrap items-center justify-between gap-4">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.3em] text-outline">
+                          Draft zone #{index + 1}
+                        </p>
+                        <h4 className="font-display text-lg">{draft.name || 'Untitled zone'}</h4>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={() => removeDraft(draft.id)}>
+                        Discard
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 gap-4 mt-3 md:grid-cols-2">
+                      <Input
+                        label="Name"
+                        placeholder="Zone name"
+                        value={draft.name}
+                        onChange={(e) => updateDraft(draft.id, 'name', e.target.value)}
+                      />
+                      <div className="space-y-1">
+                        <label className="block text-[10px] font-semibold uppercase tracking-[0.2em] text-outline">
+                          Category
+                        </label>
+                        <select
+                          className="w-full border-b-2 border-outline-variant bg-surface-container-low px-4 py-3 text-sm font-sans text-on-surface outline-none transition-colors focus:border-primary-container"
+                          value={draft.category}
+                          onChange={(e) => updateDraft(draft.id, 'category', e.target.value)}
+                        >
+                          {MANUAL_CATEGORY_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="mt-3">
+                      <label className="block text-[10px] font-bold tracking-[0.2em] mb-2 text-outline uppercase">
+                        Description
+                      </label>
+                      <textarea
+                        className="w-full min-h-[80px] resize-none bg-surface-container-low border border-outline-variant px-4 py-3 text-sm font-sans outline-none transition-colors focus:border-primary-container"
+                        placeholder="Optional context for the containment protocol"
+                        value={draft.description}
+                        onChange={(e) => updateDraft(draft.id, 'description', e.target.value)}
+                      />
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-4 pt-3">
+                      <span className="text-[10px] text-outline tracking-[0.2em] uppercase">
+                        {draft.coordinates.length} points captured
+                      </span>
+                      <Button
+                        variant="secondary"
+                        onClick={() => saveDraft(draft.id)}
+                        disabled={draft.saving}
+                        size="sm"
+                      >
+                        {draft.saving ? 'Saving…' : 'Save zone'}
+                      </Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
       </div>

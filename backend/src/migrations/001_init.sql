@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS vehicles (
     vehicle_type VARCHAR(50) NOT NULL,
     phone VARCHAR(50) NOT NULL,
     status VARCHAR(50) DEFAULT 'active',
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -26,6 +27,7 @@ CREATE TABLE IF NOT EXISTS geofences (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     category VARCHAR(50) NOT NULL,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
     -- Store polygons representing the geofence boundary (SRID 4326 is WGS84)
     geom GEOGRAPHY(POLYGON, 4326) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

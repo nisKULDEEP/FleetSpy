@@ -11,6 +11,8 @@ import { Vehicles } from './pages/Vehicles';
 import { Geofences } from './pages/Geofences';
 import { Violations } from './pages/Violations';
 import { Simulator } from './pages/Simulator';
+import { Alerts } from './pages/Alerts';
+import { LocationUpdates } from './pages/LocationUpdates';
 import { Login, Register } from './pages/Auth';
 import { Toaster } from 'sonner';
 
@@ -66,6 +68,22 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Simulator />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/alerts"
+            element={
+              <ProtectedRoute>
+                <Alerts />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/locations"
+            element={
+              <ProtectedRoute>
+                <LocationUpdates />
               </ProtectedRoute>
             }
           />

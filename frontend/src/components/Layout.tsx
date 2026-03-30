@@ -4,6 +4,7 @@ import {
   LayoutGrid,
   Truck,
   Map as MapIcon,
+  MapPin,
   Bell,
   History,
   LogOut,
@@ -93,6 +94,8 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
     { to: '/', icon: LayoutGrid, label: 'Dashboard' },
     { to: '/vehicles', icon: Truck, label: 'Assets' },
     { to: '/geofences', icon: MapIcon, label: 'Geofences' },
+    { to: '/alerts', icon: Bell, label: 'Alerts' },
+    { to: '/locations', icon: MapPin, label: 'Location' },
     { to: '/violations', icon: History, label: 'Violations' },
     { to: '/simulator', icon: Navigation, label: 'Simulator' },
   ];

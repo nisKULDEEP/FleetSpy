@@ -1,8 +1,11 @@
 import React, { useState } from 'react';
 import { useGetVehiclesQuery, useCreateVehicleMutation } from '../services/api/vehiclesApi';
 import { Card, Button, Input } from '@/src/components/ui/TacticalUI';
-import { Truck, Plus, Search, Filter, Phone, User as UserIcon } from 'lucide-react';
+import { Truck, Plus, Phone, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+
+const formatGeofenceLabel = (value?: string) =>
+  value ? value.replace(/_/g, ' ').replace(/\w/g, (char) => char.toUpperCase()) : 'General';
 
 export const Vehicles = () => {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -78,51 +81,128 @@ export const Vehicles = () => {
                 <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline">
                   Status
                 </th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline">
+                  Location
+                </th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline">
+                  Zones
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
-              {vehicles.map((v) => (
-                <tr key={v.id} className="hover:bg-surface-container-low transition-colors group">
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-surface-container-highest rounded-sm">
-                        <Truck className="w-4 h-4 text-on-surface" />
+              {vehicles.map(
+                (v: {
+                  id: string;
+                  vehicle_number: string;
+                  vehicle_type: string;
+                  driver_name: string;
+                  phone: string;
+                  status: string;
+                  current_location: {
+                    latitude: number;
+                    longitude: number;
+                    timestamp: string;
+                  } | null;
+                  current_geofences: {
+                    geofence_id: string;
+                    geofence_name: string;
+                    category: string | undefined;
+                  }[];
+                }) => (
+                  <tr key={v.id} className="hover:bg-surface-container-low transition-colors group">
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-surface-container-highest rounded-sm">
+                          <Truck className="w-4 h-4 text-on-surface" />
+                        </div>
+                        <div>
+                          <p className="font-display text-sm">{v.vehicle_number}</p>
+                          <p className="text-[10px] font-mono text-outline">{v.id}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-display text-sm">{v.vehicle_number}</p>
-                        <p className="text-[10px] font-mono text-outline">{v.id}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <span className="text-[10px] font-bold px-2 py-1 bg-surface-container-highest uppercase">
-                      {v.vehicle_type}
-                    </span>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <UserIcon className="w-3 h-3 text-outline" />
-                      <span className="text-xs font-medium">{v.driver_name}</span>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <Phone className="w-3 h-3 text-outline" />
-                      <span className="text-xs font-mono">{v.phone}</span>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`w-2 h-2 rounded-full ${v.status === 'In Transit' ? 'bg-emerald-500' : v.status === 'Idle' ? 'bg-primary-container' : 'bg-red-500'}`}
-                      />
-                      <span className="text-[10px] font-bold uppercase tracking-widest">
-                        {v.status}
+                    </td>
+                    <td className="p-4">
+                      <span className="text-[10px] font-bold px-2 py-1 bg-surface-container-highest uppercase">
+                        {v.vehicle_type}
                       </span>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <UserIcon className="w-3 h-3 text-outline" />
+                        <span className="text-xs font-medium">{v.driver_name}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <Phone className="w-3 h-3 text-outline" />
+                        <span className="text-xs font-mono">{v.phone}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-2 h-2 rounded-full ${v.status === 'In Transit' ? 'bg-emerald-500' : v.status === 'Idle' ? 'bg-primary-container' : 'bg-red-500'}`}
+                        />
+                        <span className="text-[10px] font-bold uppercase tracking-widest">
+                          {v.status}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      {v.current_location ? (
+                        <>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary-container">
+                            {Number(v.current_location.latitude).toFixed(4)},{' '}
+                            {Number(v.current_location.longitude).toFixed(4)}
+                          </p>
+                          <p className="text-[10px] text-outline">
+                            {new Date(v.current_location.timestamp).toLocaleString()}
+                          </p>
+                        </>
+                      ) : (
+                        <span className="text-[10px] text-outline uppercase tracking-[0.2em]">
+                          Awaiting fix
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-4">
+                      {v.current_geofences && v.current_geofences.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {v.current_geofences.map(
+                            (zone: {
+                              geofence_id: string;
+                              geofence_name: string;
+                              category: string | undefined;
+                            }) => {
+                              const isRestricted = zone.category
+                                ?.toString()
+                                .toLowerCase()
+                                .includes('restricted');
+                              return (
+                                <span
+                                  key={zone.geofence_id}
+                                  className={`text-[10px] font-bold px-2 py-1 rounded-full ${
+                                    isRestricted
+                                      ? 'bg-red-100 text-red-600'
+                                      : 'bg-emerald-100 text-emerald-600'
+                                  }`}
+                                  title={formatGeofenceLabel(zone.category)}
+                                >
+                                  {zone.geofence_name} · {formatGeofenceLabel(zone.category)}
+                                </span>
+                              );
+                            },
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-[10px] text-outline uppercase tracking-[0.2em]">
+                          No zones
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                ),
+              )}
             </tbody>
           </table>
         </div>

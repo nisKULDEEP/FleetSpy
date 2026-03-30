@@ -7,7 +7,6 @@ export const violationsApi = baseApi.injectEndpoints({
         const query = new URLSearchParams(params).toString();
         return `/violations/history${query ? `?${query}` : ''}`;
       },
-      transformResponse: (res: any) => res.violations || res,
       providesTags: ['Violation'],
     }),
   }),

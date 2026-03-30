@@ -98,7 +98,6 @@ io.of('/ws/vehicles').on('connection', (socket) => {
                 ? parseInt(data.vehicle_id.split('_')[1], 10) 
                 : parseInt(data.vehicle_id, 10);
             
-            // Note: io.of('/ws/alerts') isn't used directly in locationService anymore, but passed as placeholder
             const current_geofences = await locationService.processLocation(
                 numericId, data.latitude, data.longitude, data.timestamp, io
             );

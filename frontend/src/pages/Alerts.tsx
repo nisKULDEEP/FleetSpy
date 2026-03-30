@@ -1,33 +1,65 @@
 import React, { useState } from 'react';
 import { useGetAlertsQuery, useConfigureAlertsMutation } from '../services/api/alertsApi';
+import { useGetGeofencesQuery } from '../services/api/geofencesApi';
+import { useGetVehiclesQuery } from '../services/api/vehiclesApi';
 import { Card, Button, Input } from '@/src/components/ui/TacticalUI';
-import { Bell, Zap, History, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
+
+const EVENT_TYPES = [
+  { label: 'Entry', value: 'entry' },
+  { label: 'Exit', value: 'exit' },
+  { label: 'Entry + Exit', value: 'both' },
+];
 
 export const Alerts = () => {
-  const { data: alerts = [], isLoading: loading } = useGetAlertsQuery({});
-  const [configureAlerts] = useConfigureAlertsMutation();
   const [formData, setFormData] = useState({
-    type: 'GEOFENCE',
-    threshold: 80,
+    geofence_id: '',
     vehicle_id: '',
+    event_type: 'entry',
   });
+  const [alertFilters, setAlertFilters] = useState({ geofence_id: '', vehicle_id: '' });
 
-  const handleConfigureAlert = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const { data: geofences = [] } = useGetGeofencesQuery();
+  const { data: vehicles = [] } = useGetVehiclesQuery();
+  const { data: alerts = [], isLoading: alertsLoading } = useGetAlertsQuery(alertFilters);
+  const [configureAlerts] = useConfigureAlertsMutation();
+
+  const handleConfigureAlert = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!formData.geofence_id || !formData.event_type) {
+      toast.error('Choose a geofence and event type first.');
+      return;
+    }
+    const payload: Record<string, string> = {
+      geofence_id: formData.geofence_id,
+      event_type: formData.event_type,
+    };
+    if (formData.vehicle_id) {
+      payload.vehicle_id = formData.vehicle_id;
+    }
+
     try {
-      await configureAlerts(formData).unwrap();
-      
+      await configureAlerts(payload).unwrap();
+      toast.success('Alert rule configured');
+      setFormData({ geofence_id: '', vehicle_id: '', event_type: 'entry' });
+      setAlertFilters({ geofence_id: '', vehicle_id: '' });
     } catch (error) {
       console.error('Failed to configure alert:', error);
+      toast.error('Could not save alert rule.');
     }
   };
 
-  if (loading) {
+  const handleFilterChange = (field: keyof typeof alertFilters, value: string) => {
+    setAlertFilters((prev) => ({ ...prev, [field]: value }));
+  };
+
+  if (alertsLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-10rem)]">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-primary-container border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="font-display tracking-widest uppercase text-xs">Parsing Command Rules...</p>
+          <p className="font-display tracking-widest uppercase text-xs">Aligning Alert Mesh...</p>
         </div>
       </div>
     );
@@ -39,77 +71,72 @@ export const Alerts = () => {
         <div>
           <h1 className="text-5xl font-display tracking-tighter">Alert Configurations</h1>
           <p className="text-outline font-medium mt-2 max-w-xl">
-            Advanced rule-based logic for autonomous fleet monitoring and precision execution.
+            Tune the telemetry rules that trigger mission-critical notifications.
           </p>
-        </div>
-        <div className="flex gap-4">
-          <div className="bg-surface-container-low p-4 text-right">
-            <p className="text-2xl font-display">{alerts.length}</p>
-            <p className="text-[10px] font-bold text-outline uppercase tracking-widest">
-              Active Rules
-            </p>
-          </div>
-          <div className="bg-surface-container-low p-4 text-right">
-            <p className="text-2xl font-display">N/A</p>
-            <p className="text-[10px] font-bold text-outline uppercase tracking-widest">
-              Latency Avg
-            </p>
-          </div>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <div className="lg:col-span-4">
-          <Card title="Rule Logic Builder" subtitle="Configure new trigger parameters">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1 space-y-6">
+          <Card title="Rule Logic Builder" subtitle="Associate vehicles with geofences">
             <form className="space-y-6 mt-4" onSubmit={handleConfigureAlert}>
               <div>
                 <label className="block text-[10px] font-bold tracking-[0.2em] mb-2 text-outline uppercase">
-                  Asset Identifier
+                  Geofence
                 </label>
-                <Input
-                  placeholder="e.g. veh_1"
+                <select
+                  className="w-full bg-surface border border-outline-variant rounded p-3 text-sm"
+                  value={formData.geofence_id}
+                  onChange={(e) => setFormData({ ...formData, geofence_id: e.target.value })}
+                  required
+                >
+                  <option value="">Select a geofence</option>
+                  {geofences.map((geo) => (
+                    <option key={geo.id} value={geo.id}>
+                      {geo.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-bold tracking-[0.2em] mb-2 text-outline uppercase">
+                  Vehicle (optional)
+                </label>
+                <select
+                  className="w-full bg-surface border border-outline-variant rounded p-3 text-sm"
                   value={formData.vehicle_id}
                   onChange={(e) => setFormData({ ...formData, vehicle_id: e.target.value })}
-                  required
-                />
+                >
+                  <option value="">All vehicles</option>
+                  {vehicles.map((vehicle) => (
+                    <option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.vehicle_number}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
                 <label className="block text-[10px] font-bold tracking-[0.2em] mb-2 text-outline uppercase">
-                  Trigger Condition
+                  Event Type
                 </label>
-                <div className="space-y-2">
-                  {[
-                    { id: 'SPEED_LIMIT', label: 'Velocity Threshold', icon: Zap },
-                    { id: 'GEOFENCE', label: 'Geofence Variance', icon: History },
-                    { id: 'FUEL', label: 'Fuel Criticality', icon: Bell },
-                  ].map((cond) => (
-                    <div
-                      key={cond.id}
-                      onClick={() => setFormData({ ...formData, type: cond.id })}
-                      className={`p-4 flex items-center justify-between cursor-pointer transition-colors ${formData.type === cond.id ? 'bg-surface border-l-4 border-primary-container' : 'bg-surface-container-low hover:bg-surface-container-highest'}`}
+                <div className="flex gap-2 flex-wrap">
+                  {EVENT_TYPES.map((type) => (
+                    <button
+                      key={type.value}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, event_type: type.value })}
+                      className={`px-3 py-2 rounded text-[10px] uppercase tracking-[0.2em] font-bold border ${
+                        formData.event_type === type.value
+                          ? 'border-primary-container bg-primary-container/20 text-primary-container'
+                          : 'border-outline-variant text-outline'
+                      }`}
                     >
-                      <span className="text-xs font-display uppercase">{cond.label}</span>
-                      <cond.icon
-                        className={`w-4 h-4 ${formData.type === cond.id ? 'text-primary' : 'text-outline'}`}
-                      />
-                    </div>
+                      {type.label}
+                    </button>
                   ))}
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold tracking-[0.2em] mb-2 text-outline uppercase">
-                  Threshold Value
-                </label>
-                <Input
-                  type="number"
-                  value={formData.threshold}
-                  onChange={(e) =>
-                    setFormData({ ...formData, threshold: parseInt(e.target.value) })
-                  }
-                  required
-                />
               </div>
 
               <div className="pt-4">
@@ -119,105 +146,90 @@ export const Alerts = () => {
               </div>
             </form>
           </Card>
+
+          <Card title="Filter Alerts" subtitle="Narrow down the active rules">
+            <div className="space-y-4 mt-4">
+              <div>
+                <Input
+                  label="Geofence"
+                  placeholder="Filter by geofence"
+                  value={alertFilters.geofence_id}
+                  onChange={(e) => handleFilterChange('geofence_id', e.target.value)}
+                  list="geofence-options"
+                />
+                <datalist id="geofence-options">
+                  {geofences.map((geo) => (
+                    <option key={geo.id} value={geo.id}>
+                      {geo.name}
+                    </option>
+                  ))}
+                </datalist>
+              </div>
+              <div>
+                <Input
+                  label="Vehicle"
+                  placeholder="Filter by vehicle"
+                  value={alertFilters.vehicle_id}
+                  onChange={(e) => handleFilterChange('vehicle_id', e.target.value)}
+                  list="vehicle-options"
+                />
+                <datalist id="vehicle-options">
+                  {vehicles.map((vehicle) => (
+                    <option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.vehicle_number}
+                    </option>
+                  ))}
+                </datalist>
+              </div>
+              <div>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setAlertFilters({ geofence_id: '', vehicle_id: '' })}
+                >
+                  Reset Filters
+                </Button>
+              </div>
+            </div>
+          </Card>
         </div>
 
-        <div className="lg:col-span-8 space-y-8">
-          <div>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-sm font-display tracking-[0.2em] uppercase">
-                Active Command Rules
-              </h3>
-              <span className="text-[10px] font-bold text-outline uppercase">Auto-Refresh: 5s</span>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {alerts.map((rule) => (
-                <div
-                  key={rule.id}
-                  className={`bg-surface p-6 tactical-shadow border-l-4 h-48 flex flex-col justify-between group hover:bg-surface-container-low transition-colors ${rule.type === 'GEOFENCE' ? 'border-primary-container' : 'border-red-600'}`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span
-                        className={`text-[10px] font-black uppercase tracking-widest block mb-1 ${rule.type === 'GEOFENCE' ? 'text-primary' : 'text-red-600'}`}
-                      >
-                        {rule.type}
-                      </span>
-                      <h4 className="text-xl font-display tracking-tighter uppercase">
-                        Threshold: {rule.threshold}
-                      </h4>
-                    </div>
-                    <div className="w-10 h-5 rounded-full p-1 flex items-center bg-on-surface justify-end">
-                      <div className="w-3 h-3 bg-primary-container rounded-full" />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <span className="text-[10px] font-bold text-outline uppercase tracking-widest">
-                      Asset: {rule.vehicle_id}
-                    </span>
-                  </div>
+        <div className="lg:col-span-2 space-y-6">
+          <Card title="Active Alert Rules" subtitle={`Showing ${alerts.length} rules`}>
+            <div className="space-y-4 mt-4">
+              {alerts.length === 0 ? (
+                <div className="text-outline text-xs text-center py-8">
+                  No alert rules match the criteria.
                 </div>
-              ))}
+              ) : (
+                alerts.map((rule) => (
+                  <div
+                    key={rule.alert_id}
+                    className="bg-surface-container-low border-l-4 border-primary-container p-4 flex flex-col gap-2"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-[10px] tracking-[0.2em] uppercase text-outline font-bold">
+                          {rule.status}
+                        </p>
+                        <h4 className="font-display text-lg uppercase tracking-tight">
+                          {rule.geofence_name}
+                        </h4>
+                      </div>
+                      <ExternalLink className="w-4 h-4 text-outline" />
+                    </div>
+                    <div className="flex flex-wrap gap-4 text-[10px] text-outline uppercase tracking-[0.3em]">
+                      <span>Vehicle: {rule.vehicle_number || 'All Vehicles'}</span>
+                      <span>Event: {rule.event_type}</span>
+                    </div>
+                    <p className="text-[10px] text-outline">
+                      Created {new Date(rule.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                ))
+              )}
             </div>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-display tracking-[0.2em] uppercase mb-4">
-              Execution History
-            </h3>
-            <Card className="p-0 overflow-hidden">
-              <table className="w-full text-left font-sans text-xs">
-                <thead>
-                  <tr className="bg-on-surface text-surface font-display text-[10px] tracking-widest uppercase">
-                    <th className="p-4">Timestamp</th>
-                    <th className="p-4">Rule Identifier</th>
-                    <th className="p-4">Asset ID</th>
-                    <th className="p-4">Status</th>
-                    <th className="p-4 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-outline-variant">
-                  {[
-                    {
-                      time: '14:22:09.11',
-                      rule: 'ZONE_EXIT_B',
-                      asset: 'DR-092-ALPHA',
-                      status: 'SENT',
-                      color: 'bg-red-600',
-                    },
-                    {
-                      time: '13:58:44.82',
-                      rule: 'GEOFENCE_X',
-                      asset: 'VT-441-OMEGA',
-                      status: 'SUPPRESSED',
-                      color: 'bg-outline',
-                    },
-                    {
-                      time: '12:15:33.04',
-                      rule: 'FUEL_CRIT_01',
-                      asset: 'DR-112-BETA',
-                      status: 'EXECUTED',
-                      color: 'bg-primary',
-                    },
-                  ].map((log, i) => (
-                    <tr key={i} className="hover:bg-surface-container-low transition-colors">
-                      <td className="p-4 font-mono">{log.time}</td>
-                      <td className="p-4 font-bold">{log.rule}</td>
-                      <td className="p-4">{log.asset}</td>
-                      <td className="p-4">
-                        <span className="flex items-center gap-2">
-                          <div className={`w-1.5 h-1.5 rounded-full ${log.color}`} />
-                          {log.status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right">
-                        <ExternalLink className="w-4 h-4 text-outline hover:text-on-surface cursor-pointer inline" />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Card>
-          </div>
+          </Card>
         </div>
       </div>
     </div>

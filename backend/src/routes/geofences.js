@@ -6,7 +6,7 @@ router.get('/', async (req, res) => {
   try {
     const { category } = req.query;
     const user_id = req.user.id;
-    
+    console.log(`Fetching geofences for user_id: ${user_id}, category filter: ${category}`);
     let query = `
       SELECT id, name, description, category, created_at, 
             ST_AsGeoJSON(geom)::json AS geometry

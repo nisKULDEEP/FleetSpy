@@ -24,6 +24,7 @@ export const vehiclesApi = baseApi.injectEndpoints({
         method: 'POST',
         body: data,
       }),
+      invalidatesTags: ['Vehicle'],
     }),
   }),
   overrideExisting: false,

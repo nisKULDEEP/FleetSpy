@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { MapContainer, TileLayer, FeatureGroup, Polygon, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, FeatureGroup, Polygon, Tooltip, useMap } from 'react-leaflet';
 import '@geoman-io/leaflet-geoman-free';
 import '@geoman-io/leaflet-geoman-free/dist/leaflet-geoman.css';
 import 'leaflet/dist/leaflet.css';
@@ -76,7 +76,11 @@ export const MapComponent = ({
                 color: target.category === 'Restricted' ? '#ef4444' : '#FFD700',
                 fillColor: target.category === 'Restricted' ? '#ef4444' : '#FFD700',
               }}
-            />
+            >
+              <Tooltip direction="center" permanent className="text-[10px] font-bold">
+                {target.name || 'Geofence'}
+              </Tooltip>
+            </Polygon>
           ) : null,
         )}
       </FeatureGroup>
