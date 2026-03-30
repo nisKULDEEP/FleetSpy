@@ -28,15 +28,20 @@ import violationRoutes from './routes/violations.js';
 const PORT = process.env.PORT;
 const app = express();
 const server = http.createServer(app);
+
+// Clean up FRONTEND_URL to ensure no trailing slash causes CORS mismatch
+const frontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : 'http://localhost:5173';
+const allowedOrigins = [frontendUrl, 'http://localhost:5173', 'https://fleet-spy.vercel.app'];
+
 const io = new Server(server, {
     cors: {
-        origin: '*',
+        origin: allowedOrigins,
         methods: ['GET', 'POST']
     }
 });
 
 app.set('io', io);
-app.use(cors({ origin: '*' }));
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
 app.use(timeNs());
 
