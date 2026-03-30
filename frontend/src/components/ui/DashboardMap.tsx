@@ -2,6 +2,7 @@ import React from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { useGetVehicleLocationQuery } from '@/src/services/api/vehiclesApi';
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -35,24 +36,30 @@ export const DashboardMap = ({
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
       />
-      {units.map((unit) =>
-        unit.location && unit.location.latitude && unit.location.longitude ? (
-          <Marker
-            key={unit.id}
-            position={[unit.location.latitude, unit.location.longitude]}
-            icon={vehicleIcon}
-          >
-            <Popup>
-              <div className="text-on-surface">
-                <strong>{unit.vehicle_number}</strong>
-                <br />
-                Status: {unit.status}
-              </div>
-            </Popup>
-          </Marker>
-        ) : null,
-      )}
+      {units.map((unit) => (
+        <VehicleLocationMarker key={unit.id} vehicle={unit} />
+      ))}
     </MapContainer>
+  );
+};
+
+const VehicleLocationMarker = ({ vehicle }: { vehicle: any }) => {
+  const { data } = useGetVehicleLocationQuery(vehicle.id, {
+    skip: !vehicle.id,
+  });
+  const coords = data?.current_location;
+  if (!coords?.latitude || !coords?.longitude) return null;
+
+  return (
+    <Marker position={[coords.latitude, coords.longitude]} icon={vehicleIcon}>
+      <Popup>
+        <div className="text-on-surface">
+          <strong>{vehicle.vehicle_number}</strong>
+          <br />
+          Status: {vehicle.status}
+        </div>
+      </Popup>
+    </Marker>
   );
 };
 export default DashboardMap;
