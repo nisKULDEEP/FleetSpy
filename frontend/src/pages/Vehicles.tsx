@@ -59,14 +59,6 @@ export const Vehicles = () => {
       </header>
 
       <Card>
-        <div className="flex flex-col md:flex-row gap-4 mb-8">
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" />
-            <Input placeholder="Search by ID, Driver, or Plate..." className="pl-12" />
-          </div>
-          
-        </div>
-
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -85,9 +77,6 @@ export const Vehicles = () => {
                 </th>
                 <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline">
                   Status
-                </th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline text-right">
-                  Actions
                 </th>
               </tr>
             </thead>
@@ -132,7 +121,6 @@ export const Vehicles = () => {
                       </span>
                     </div>
                   </td>
-                  
                 </tr>
               ))}
             </tbody>

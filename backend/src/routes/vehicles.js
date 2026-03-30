@@ -50,6 +50,7 @@ router.get('/', async (req, res) => {
 });
 router.post('/location', async (req, res) => {
   const { vehicle_id, latitude, longitude, timestamp } = req.body;
+  console.log('Received location update:', { vehicle_id, latitude, longitude, timestamp });
   if (!vehicle_id || latitude == null || longitude == null || !timestamp) {
       return res.status(400).json({ msg: 'Missing required payload fields' });
   }
@@ -70,36 +71,6 @@ router.post('/location', async (req, res) => {
   } catch (err) {
       console.error(err.message);
       res.status(500).json({ msg: 'Server Error', error: err.message });
-  }
-});
-
-router.get('/location/:vehicle_id', async (req, res) => {
-  try {
-    const v_id = req.params.vehicle_id;
-    const numericId = v_id.startsWith('veh_') ? parseInt(v_id.split('_')[1], 10) : parseInt(v_id, 10);
-    const vehicleQuery = await db.query('SELECT * FROM vehicles WHERE id = $1', [numericId]);
-    if (vehicleQuery.rows.length === 0) {
-      return res.status(404).json({ msg: 'Vehicle not found' });
-    }
-    const locQuery = await db.query('SELECT ST_Y(geom::geometry) as lat, ST_X(geom::geometry) as lng, timestamp FROM vehicle_locations WHERE vehicle_id = $1 ORDER BY timestamp DESC LIMIT 1', [numericId]);
-    let current_location = null;
-    
-    if (locQuery.rows.length > 0) {
-      current_location = {
-        latitude: locQuery.rows[0].lat,
-        longitude: locQuery.rows[0].lng,
-        timestamp: locQuery.rows[0].timestamp
-      };
-    }
-    res.json({
-      vehicle_id: `veh_${numericId}`,
-      vehicle_number: vehicleQuery.rows[0].vehicle_number,
-      current_location,
-      time_ns: process.hrtime.bigint().toString()
-    });
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server Error');
   }
 });
 export default router;

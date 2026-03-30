@@ -63,8 +63,8 @@ export const Simulator = () => {
           await createVehicle({
             vehicle_number: 'TEST-SIM-01',
             vehicle_type: 'Truck',
-            driver_name: 'Sim Driver',
-            phone: '555-0000',
+            driver_name: 'Kuldeep Singh',
+            phone: '7536064444',
           }).unwrap();
           refetchVehicles();
         } catch (e) {

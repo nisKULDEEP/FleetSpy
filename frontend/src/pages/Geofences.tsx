@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
-import { useGetGeofencesQuery, useCreateGeofenceMutation, useDeleteGeofenceMutation } from '../services/api/geofencesApi';
+import {
+  useGetGeofencesQuery,
+  useCreateGeofenceMutation,
+  useDeleteGeofenceMutation,
+} from '../services/api/geofencesApi';
 import { Card, Button, Input } from '@/src/components/ui/TacticalUI';
 import MapComponent from '@/src/components/ui/MapComponent';
-import { Plus, Info, Layers, Crosshair, Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 
 export const Geofences = () => {
   const { data: geofences = [], isLoading: loading } = useGetGeofencesQuery();
@@ -26,16 +30,15 @@ export const Geofences = () => {
         category: formData.category,
         description: `Center: ${lat}, ${lng}, Rad: ${formData.radius}m`,
         coordinates: [
-          [lng - d, lat - d],
-          [lng - d, lat + d],
-          [lng + d, lat + d],
-          [lng + d, lat - d],
-          [lng - d, lat - d], // Close polygon
+          [lat - d, lng - d],
+          [lat + d, lng - d],
+          [lat + d, lng + d],
+          [lat - d, lng + d],
+          [lat - d, lng - d], // Close polygon
         ],
       };
 
       await createGeofence(payload).unwrap();
-      
     } catch (error) {
       console.error('Failed to create geofence:', error);
     }
@@ -86,7 +89,14 @@ export const Geofences = () => {
                       >
                         {geo.category === 'Restricted' ? 'Warning' : 'Active'}
                       </span>
-                      <button onClick={(e) => { e.stopPropagation(); deleteGeofence(geo.id); }} className="text-red-500 hover:text-red-400 p-0.5" title="Delete Zone">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteGeofence(geo.id);
+                        }}
+                        className="text-red-500 hover:text-red-400 p-0.5"
+                        title="Delete Zone"
+                      >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
@@ -98,7 +108,6 @@ export const Geofences = () => {
                     <span className="text-[10px] font-bold text-outline uppercase tracking-widest">
                       {geo.category}
                     </span>
-                    
                   </div>
                 </div>
               ))}
@@ -129,10 +138,20 @@ export const Geofences = () => {
 
         <div className="xl:col-span-8">
           <Card className="p-0 overflow-hidden h-full min-h-[600px] flex flex-col">
-<div className="flex-1 relative bg-surface-container-low h-full min-h-[400px]">
-  <MapComponent geofences={geofences} onShapeCreated={() => {}} />
-</div>
-</Card>
+            <div className="flex-1 relative bg-surface-container-low h-full min-h-[400px]">
+              <MapComponent
+            geofences={geofences}
+            onShapeCreated={async (coords) => {
+              await createGeofence({
+                name: formData.name || ('Custom ' + Math.floor(Math.random()*1000)),
+                category: formData.category,
+                coordinates: coords,
+                description: 'Geoman map region',
+              });
+            }}
+          />
+            </div>
+          </Card>
         </div>
       </div>
     </div>
