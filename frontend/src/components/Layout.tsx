@@ -16,14 +16,16 @@ import { cn } from '@/src/lib/utils';
 import { socketService } from '@/src/services/sockets/socketService';
 import { toast } from 'sonner';
 
-const SidebarItem: React.FC<{ to: string; icon: any; label: string; active: boolean }> = ({
+const SidebarItem: React.FC<{ to: string; icon: any; label: string; active: boolean; onClick?: () => void }> = ({
   to,
   icon: Icon,
   label,
   active,
+  onClick,
 }) => (
   <Link
     to={to}
+    onClick={onClick}
     className={cn(
       'flex items-center gap-4 p-4 transition-all group',
       active
@@ -44,7 +46,19 @@ const SidebarItem: React.FC<{ to: string; icon: any; label: string; active: bool
 export const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(window.innerWidth >= 1024);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setIsSidebarOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleEvent = (eventData: any) => {
     console.log('Event Notification:', eventData);
@@ -68,6 +82,12 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
       socketService.disconnect();
     };
   }, []);
+
+  const handleNavClick = () => {
+    if (window.innerWidth < 1024) {
+      setIsSidebarOpen(false);
+    }
+  };
 
   const navItems = [
     { to: '/', icon: LayoutGrid, label: 'Dashboard' },
@@ -142,6 +162,7 @@ export const Layout = ({ children }: { children: React.ReactNode }) => {
                   icon={item.icon}
                   label={item.label}
                   active={location.pathname === item.to}
+                  onClick={handleNavClick}
                 />
               ))}
             </nav>

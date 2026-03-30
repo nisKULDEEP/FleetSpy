@@ -30,13 +30,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: process.env.FRONTEND_URL,
+        origin: '*',
         methods: ['GET', 'POST']
     }
 });
 
 app.set('io', io);
-app.use(cors());
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 app.use(timeNs());
 

@@ -6,20 +6,21 @@ import { ShieldAlert, ArrowRight } from 'lucide-react';
 
 export const Login = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('test_user@gmail.com');
+  const [password, setPassword] = useState('test_password');
   const [error, setError] = useState('');
   const [login, { isLoading }] = useLoginMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Submitting login form:", { email, password });
     setError('');
     try {
       const response = await login({ email, password }).unwrap();
       localStorage.setItem('fleetspy_token', response.token);
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Login failed');
+      console.error("Login Error:", err); setError(err?.data?.msg || err?.error || err.message || 'Login failed');
     }
   };
 
@@ -97,14 +98,15 @@ export const Login = () => {
 
 export const Register = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('test_user@gmail.com');
+  const [password, setPassword] = useState('test_password');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [register, { isLoading }] = useRegisterMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Submitting login form:", { email, password });
     if (password !== confirmPassword) {
       setError('Passwords do not match');
       return;
@@ -114,7 +116,7 @@ export const Register = () => {
       await register({ email, password }).unwrap();
       navigate('/login');
     } catch (err: any) {
-      setError(err.message || 'Registration failed');
+      console.error("Register Error:", err); setError(err?.data?.msg || err?.error || err.message || 'Registration failed');
     } finally {
       setIsLoading(false);
     }
