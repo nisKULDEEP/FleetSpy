@@ -16,13 +16,13 @@ import { cn } from '@/src/lib/utils';
 import { socketService } from '@/src/services/sockets/socketService';
 import { toast } from 'sonner';
 
-const SidebarItem: React.FC<{ to: string; icon: any; label: string; active: boolean; onClick?: () => void }> = ({
-  to,
-  icon: Icon,
-  label,
-  active,
-  onClick,
-}) => (
+const SidebarItem: React.FC<{
+  to: string;
+  icon: any;
+  label: string;
+  active: boolean;
+  onClick?: () => void;
+}> = ({ to, icon: Icon, label, active, onClick }) => (
   <Link
     to={to}
     onClick={onClick}

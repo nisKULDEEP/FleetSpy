@@ -30,8 +30,8 @@ const app = express();
 const server = http.createServer(app);
 
 // Clean up FRONTEND_URL to ensure no trailing slash causes CORS mismatch
-const frontendUrl = process.env.FRONTEND_URL ? process.env.FRONTEND_URL.replace(/\/$/, '') : 'http://localhost:5173';
-const allowedOrigins = [frontendUrl, 'http://localhost:5173', 'https://fleet-spy.vercel.app'];
+const frontendUrl = process.env.FRONTEND_URL? process.env.FRONTEND_URL.replace(/\/+$/, '') : null;
+const allowedOrigins = [frontendUrl];
 
 const io = new Server(server, {
     cors: {
