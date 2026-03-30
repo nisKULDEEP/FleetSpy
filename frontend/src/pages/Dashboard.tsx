@@ -5,6 +5,7 @@ import { useGetGeofencesQuery } from '../services/api/geofencesApi';
 import { useGetAlertsQuery } from '../services/api/alertsApi';
 import { useGetViolationHistoryQuery } from '../services/api/violationsApi';
 import { Card, Button } from '@/src/components/ui/TacticalUI';
+import DashboardMap from '@/src/components/ui/DashboardMap';
 import { Truck, MapPin, AlertTriangle, Activity } from 'lucide-react';
 import {
   XAxis,
@@ -279,22 +280,10 @@ export const Dashboard = () => {
         </Card>
 
         <Card title="Tactical Map" subtitle="Sector 7 grid visualization">
-          <div className="h-[400px] w-full mt-4 bg-surface-container-low relative overflow-hidden group">
-            <img
-              src="https://picsum.photos/seed/tactical-map/800/600?grayscale"
-              alt="Map"
-              className="w-full h-full object-cover opacity-50 grayscale group-hover:opacity-70 transition-opacity"
-              referrerPolicy="no-referrer"
-            />
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-32 h-32 border-2 border-primary-container/30 rounded-full animate-ping" />
-              <div className="absolute w-2 h-2 bg-primary-container rounded-full" />
-            </div>
-            <div className="absolute bottom-4 right-4 bg-on-surface text-surface p-2 text-[10px] font-mono">
-              GRID: 52.52N 13.40E
-            </div>
-          </div>
-        </Card>
+<div className="h-[400px] w-full mt-4 bg-surface-container-low relative overflow-hidden group">
+  <DashboardMap vehicles={activeUnits} geofences={geofencesData || []} />
+</div>
+</Card>
       </div>
     </div>
   );

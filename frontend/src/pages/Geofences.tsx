@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useGetGeofencesQuery, useCreateGeofenceMutation } from '../services/api/geofencesApi';
 import { Card, Button, Input } from '@/src/components/ui/TacticalUI';
+import MapComponent from '@/src/components/ui/MapComponent';
 import { Plus, Info, Layers, Crosshair } from 'lucide-react';
 
 export const Geofences = () => {
@@ -142,69 +143,10 @@ export const Geofences = () => {
 
         <div className="xl:col-span-8">
           <Card className="p-0 overflow-hidden h-full min-h-[600px] flex flex-col">
-            <div className="flex-1 relative bg-surface-container-low">
-              <img
-                src="https://picsum.photos/seed/geofence-map/1200/800?grayscale"
-                alt="Tactical Map"
-                className="w-full h-full object-cover opacity-60 grayscale"
-                referrerPolicy="no-referrer"
-              />
-
-              {/* Tactical Overlays */}
-              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                <div className="w-[400px] h-[400px] border-2 border-primary-container rounded-full flex items-center justify-center animate-pulse">
-                  <div className="w-2 h-2 bg-primary-container rounded-full" />
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full mb-2 bg-on-surface text-primary-container px-2 py-1 text-[10px] font-bold font-mono">
-                    R: {formData.radius}.00M
-                  </div>
-                </div>
-                <div className="absolute top-1/4 left-1/4 w-32 h-32 border-2 border-red-500/50 bg-red-500/10" />
-              </div>
-
-              {/* Map Controls */}
-              <div className="absolute top-6 right-6 flex flex-col gap-2">
-                <button className="bg-surface w-10 h-10 flex items-center justify-center hover:bg-surface-container-low shadow-sm border border-outline-variant">
-                  <Plus className="w-4 h-4" />
-                </button>
-                <button className="bg-surface w-10 h-10 flex items-center justify-center hover:bg-surface-container-low shadow-sm border border-outline-variant">
-                  <Layers className="w-4 h-4" />
-                </button>
-                <button className="bg-on-surface text-surface w-10 h-10 flex items-center justify-center shadow-sm mt-4">
-                  <Crosshair className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Legend */}
-              <div className="absolute bottom-6 left-6 bg-surface/90 backdrop-blur-md p-4 border-l-4 border-primary-container max-w-xs">
-                <div className="flex items-center gap-2 mb-2">
-                  <Info className="w-4 h-4 text-primary" />
-                  <h4 className="font-display text-xs tracking-widest uppercase">
-                    Radar Status: Active
-                  </h4>
-                </div>
-                <div className="space-y-1 text-[10px] font-bold text-outline uppercase">
-                  <div className="flex justify-between">
-                    <span>Active Assets</span>
-                    <span className="text-on-surface">24 Units</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Breach Attempts</span>
-                    <span className="text-red-600">0 (24H)</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-on-surface text-surface p-4 flex justify-between items-center font-mono text-[10px]">
-              <div className="flex gap-8">
-                <span>SYS_REF: GRID_S7_ALPHA</span>
-                <span>
-                  CURSOR: {formData.coordinates[1]}° N, {formData.coordinates[0]}° W
-                </span>
-              </div>
-              <span className="text-primary-container">ELEVATION: 248M AMSL</span>
-            </div>
-          </Card>
+<div className="flex-1 relative bg-surface-container-low h-full min-h-[400px]">
+  <MapComponent vehicles={[]} geofences={geofences} />
+</div>
+</Card>
         </div>
       </div>
     </div>
