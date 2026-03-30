@@ -1,6 +1,7 @@
 import express from 'express';
 const router = express.Router();
 import db from '../config/db.js';
+
 router.post('/configure', async (req, res) => {
   const { geofence_id, vehicle_id, event_type } = req.body;
   if (!geofence_id || !event_type) {
@@ -27,6 +28,7 @@ router.post('/configure', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
 router.get('/', async (req, res) => {
   try {
     const { geofence_id, vehicle_id } = req.query;
@@ -70,4 +72,5 @@ router.get('/', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
 export default router;

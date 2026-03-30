@@ -1,11 +1,11 @@
-const API_BASE_URL = '/api'; // Assuming a proxy or local server handles this
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export const api = {
   async request(endpoint: string, options: RequestInit = {}) {
     const token = localStorage.getItem('fleetspy_token');
     const headers = {
       'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     };
 
@@ -23,8 +23,10 @@ export const api = {
   },
 
   auth: {
-    login: (credentials: any) => api.request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
-    register: (data: any) => api.request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
+    login: (credentials: any) =>
+      api.request('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
+    register: (data: any) =>
+      api.request('/auth/register', { method: 'POST', body: JSON.stringify(data) }),
   },
 
   vehicles: {
@@ -34,7 +36,8 @@ export const api = {
     },
     create: (data: any) => api.request('/vehicles', { method: 'POST', body: JSON.stringify(data) }),
     getLocation: (id: string) => api.request(`/vehicles/location/${id}`),
-    updateLocation: (data: any) => api.request('/vehicles/location', { method: 'POST', body: JSON.stringify(data) }),
+    updateLocation: (data: any) =>
+      api.request('/vehicles/location', { method: 'POST', body: JSON.stringify(data) }),
   },
 
   geofences: {
@@ -42,7 +45,9 @@ export const api = {
       const data = await api.request(`/geofences${category ? `?category=${category}` : ''}`);
       return data.geofences || data;
     },
-    create: (data: any) => api.request('/geofences', { method: 'POST', body: JSON.stringify(data) }),
+    create: (data: any) =>
+      api.request('/geofences', { method: 'POST', body: JSON.stringify(data) }),
+    delete: (id: string) => api.request(`/geofences/${id}`, { method: 'DELETE' }),
   },
 
   alerts: {
@@ -51,7 +56,8 @@ export const api = {
       const data = await api.request(`/alerts${query ? `?${query}` : ''}`);
       return data.alerts || data;
     },
-    configure: (data: any) => api.request('/alerts/configure', { method: 'POST', body: JSON.stringify(data) }),
+    configure: (data: any) =>
+      api.request('/alerts/configure', { method: 'POST', body: JSON.stringify(data) }),
   },
 
   violations: {

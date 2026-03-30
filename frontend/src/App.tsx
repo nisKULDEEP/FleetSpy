@@ -9,9 +9,10 @@ import { Layout } from './components/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Vehicles } from './pages/Vehicles';
 import { Geofences } from './pages/Geofences';
-import { Alerts } from './pages/Alerts';
 import { Violations } from './pages/Violations';
+import { Simulator } from './pages/Simulator';
 import { Login, Register } from './pages/Auth';
+import { Toaster } from 'sonner';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const token = localStorage.getItem('fleetspy_token');
@@ -21,19 +22,57 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 export default function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        
-        <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-        <Route path="/vehicles" element={<ProtectedRoute><Vehicles /></ProtectedRoute>} />
-        <Route path="/geofences" element={<ProtectedRoute><Geofences /></ProtectedRoute>} />
-        <Route path="/alerts" element={<ProtectedRoute><Alerts /></ProtectedRoute>} />
-        <Route path="/violations" element={<ProtectedRoute><Violations /></ProtectedRoute>} />
-        
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <>
+      <Toaster position="top-right" richColors />
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/vehicles"
+            element={
+              <ProtectedRoute>
+                <Vehicles />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/geofences"
+            element={
+              <ProtectedRoute>
+                <Geofences />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/violations"
+            element={
+              <ProtectedRoute>
+                <Violations />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/simulator"
+            element={
+              <ProtectedRoute>
+                <Simulator />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Router>
+    </>
   );
 }

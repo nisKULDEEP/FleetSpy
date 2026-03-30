@@ -2,12 +2,14 @@ import express from 'express';
 const router = express.Router();
 import db from '../config/db.js';
 import LocationService from '../services/locationService.js';
+
 router.post('/', async (req, res) => {
   const { vehicle_number, driver_name, vehicle_type, phone } = req.body;
+  const user_id = req.user.id;
   try {
     const newVehicle = await db.query(
-      'INSERT INTO vehicles (vehicle_number, driver_name, vehicle_type, phone) VALUES ($1, $2, $3, $4) RETURNING *',
-      [vehicle_number, driver_name, vehicle_type, phone]
+      'INSERT INTO vehicles (vehicle_number, driver_name, vehicle_type, phone, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [vehicle_number, driver_name, vehicle_type, phone, user_id]
     );
     res.status(201).json({
       id: `veh_${newVehicle.rows[0].id}`,
@@ -20,9 +22,11 @@ router.post('/', async (req, res) => {
     res.status(500).send('Server Error');
   }
 });
+
 router.get('/', async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM vehicles ORDER BY id DESC');
+    const user_id = req.user.id;
+    const result = await db.query('SELECT * FROM vehicles WHERE user_id = $1 ORDER BY id DESC', [user_id]);
     const mapped = result.rows.map(v => ({
       id: `veh_${v.id}`,
       vehicle_number: v.vehicle_number,
@@ -65,6 +69,7 @@ router.post('/location', async (req, res) => {
       res.status(500).json({ msg: 'Server Error', error: err.message });
   }
 });
+
 router.get('/location/:vehicle_id', async (req, res) => {
   try {
     const v_id = req.params.vehicle_id;
@@ -75,30 +80,18 @@ router.get('/location/:vehicle_id', async (req, res) => {
     }
     const locQuery = await db.query('SELECT ST_Y(geom::geometry) as lat, ST_X(geom::geometry) as lng, timestamp FROM vehicle_locations WHERE vehicle_id = $1 ORDER BY timestamp DESC LIMIT 1', [numericId]);
     let current_location = null;
-    let current_geofences = [];
+    
     if (locQuery.rows.length > 0) {
       current_location = {
         latitude: locQuery.rows[0].lat,
         longitude: locQuery.rows[0].lng,
         timestamp: locQuery.rows[0].timestamp
       };
-      const insideQuery = `
-         SELECT id, name, category
-         FROM geofences
-         WHERE ST_Intersects(geom, ST_SetSRID(ST_MakePoint($1, $2), 4326)::geography)
-      `;
-      const insideFences = await db.query(insideQuery, [current_location.longitude, current_location.latitude]);
-      current_geofences = insideFences.rows.map(f => ({
-        geofence_id: `geo_${f.id}`,
-        geofence_name: f.name,
-        category: f.category
-      }));
     }
     res.json({
       vehicle_id: `veh_${numericId}`,
       vehicle_number: vehicleQuery.rows[0].vehicle_number,
       current_location,
-      current_geofences,
       time_ns: process.hrtime.bigint().toString()
     });
   } catch (err) {

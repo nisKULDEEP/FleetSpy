@@ -1,6 +1,7 @@
 import express from 'express';
 const router = express.Router();
 import db from '../config/db.js';
+
 router.get('/history', async (req, res) => {
   try {
     const { vehicle_id, geofence_id, start_date, end_date, limit } = req.query;

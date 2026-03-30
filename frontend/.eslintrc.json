@@ -1,0 +1,58 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:react/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:prettier/recommended"
+  ],
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaFeatures": {
+      "jsx": true
+    },
+    "ecmaVersion": 12,
+    "sourceType": "module"
+  },
+  "plugins": ["unused-imports", "react", "react-hooks", "@typescript-eslint"],
+  "rules": {
+    "unused-imports/no-unused-imports": "error",
+    "react/react-in-jsx-scope": "off",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-explicit-any": "off",
+    "no-use-before-define": "off",
+    "@typescript-eslint/no-use-before-define": ["off"],
+    "react/jsx-filename-extension": ["warn", { "extensions": [".tsx", ".ts"] }],
+    "no-shadow": "off",
+    "@typescript-eslint/no-shadow": ["off"],
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "react/prop-types": "off",
+    "prettier/prettier": ["error", { "endOfLine": "auto" }],
+    "max-lines-per-function": "off",
+    "complexity": "off",
+    "max-params": ["error", 4],
+    "max-depth": ["error", 3],
+    "max-lines": "off",
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "ClassDeclaration",
+        "message": "Classes are not allowed. Use ES6 arrow functions and object literals instead."
+      },
+      {
+        "selector": "ClassExpression",
+        "message": "Classes are not allowed. Use ES6 arrow functions and object literals instead."
+      }
+    ]
+  },
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  }
+}

@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useGetVehiclesQuery, useCreateVehicleMutation } from '../services/api/vehiclesApi';
 import { Card, Button, Input } from '@/src/components/ui/TacticalUI';
-import { Truck, Plus, Search, Filter, Phone, User as UserIcon, Tag } from 'lucide-react';
+import { Truck, Plus, Search, Filter, Phone, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { api } from '@/src/services/api';
 
 export const Vehicles = () => {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [vehicles, setVehicles] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: vehicles = [], isLoading: loading } = useGetVehiclesQuery();
+  const [createVehicle] = useCreateVehicleMutation();
   const [formData, setFormData] = useState({
     vehicle_number: '',
     vehicle_type: '',
@@ -15,28 +15,12 @@ export const Vehicles = () => {
     phone: '',
   });
 
-  const fetchVehicles = async () => {
-    try {
-      const data = await api.vehicles.list();
-      setVehicles(data);
-    } catch (error) {
-      console.error('Failed to fetch vehicles:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchVehicles();
-  }, []);
-
   const handleAddVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.vehicles.create(formData);
+      await createVehicle(formData).unwrap();
       setShowAddModal(false);
       setFormData({ vehicle_number: '', vehicle_type: '', driver_name: '', phone: '' });
-      fetchVehicles();
     } catch (error) {
       console.error('Failed to add vehicle:', error);
     }
@@ -47,7 +31,9 @@ export const Vehicles = () => {
       <div className="flex items-center justify-center h-[calc(100vh-10rem)]">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-primary-container border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="font-display tracking-widest uppercase text-xs">Scanning Asset Registry...</p>
+          <p className="font-display tracking-widest uppercase text-xs">
+            Scanning Asset Registry...
+          </p>
         </div>
       </div>
     );
@@ -58,9 +44,15 @@ export const Vehicles = () => {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <h1 className="text-5xl font-display tracking-tighter">Asset Inventory</h1>
-          <p className="text-outline font-medium mt-2 max-w-xl">Comprehensive registry of all fleet vehicles, personnel, and operational status.</p>
+          <p className="text-outline font-medium mt-2 max-w-xl">
+            Comprehensive registry of all fleet vehicles, personnel, and operational status.
+          </p>
         </div>
-        <Button variant="secondary" onClick={() => setShowAddModal(true)} className="flex items-center gap-2">
+        <Button
+          variant="secondary"
+          onClick={() => setShowAddModal(true)}
+          className="flex items-center gap-2"
+        >
           <Plus className="w-4 h-4" />
           Register Asset
         </Button>
@@ -82,12 +74,24 @@ export const Vehicles = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-surface-container-low border-b-2 border-outline-variant">
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline">Asset Details</th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline">Class</th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline">Personnel</th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline">Contact</th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline">Status</th>
-                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline text-right">Actions</th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline">
+                  Asset Details
+                </th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline">
+                  Class
+                </th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline">
+                  Personnel
+                </th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline">
+                  Contact
+                </th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline">
+                  Status
+                </th>
+                <th className="p-4 text-[10px] font-bold uppercase tracking-widest text-outline text-right">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-outline-variant">
@@ -105,7 +109,9 @@ export const Vehicles = () => {
                     </div>
                   </td>
                   <td className="p-4">
-                    <span className="text-[10px] font-bold px-2 py-1 bg-surface-container-highest uppercase">{v.vehicle_type}</span>
+                    <span className="text-[10px] font-bold px-2 py-1 bg-surface-container-highest uppercase">
+                      {v.vehicle_type}
+                    </span>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
@@ -121,12 +127,18 @@ export const Vehicles = () => {
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2">
-                      <div className={`w-2 h-2 rounded-full ${v.status === 'In Transit' ? 'bg-emerald-500' : v.status === 'Idle' ? 'bg-primary-container' : 'bg-red-500'}`} />
-                      <span className="text-[10px] font-bold uppercase tracking-widest">{v.status}</span>
+                      <div
+                        className={`w-2 h-2 rounded-full ${v.status === 'In Transit' ? 'bg-emerald-500' : v.status === 'Idle' ? 'bg-primary-container' : 'bg-red-500'}`}
+                      />
+                      <span className="text-[10px] font-bold uppercase tracking-widest">
+                        {v.status}
+                      </span>
                     </div>
                   </td>
                   <td className="p-4 text-right">
-                    <Button variant="ghost" size="sm" className="text-[10px]">Manage</Button>
+                    <Button variant="ghost" size="sm" className="text-[10px]">
+                      Manage
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -138,14 +150,14 @@ export const Vehicles = () => {
       <AnimatePresence>
         {showAddModal && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowAddModal(false)}
               className="absolute inset-0 bg-on-surface/60 backdrop-blur-sm"
             />
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -154,38 +166,47 @@ export const Vehicles = () => {
               <Card title="Register New Asset" subtitle="Enter vehicle and driver details">
                 <form className="space-y-6 mt-4" onSubmit={handleAddVehicle}>
                   <div className="grid grid-cols-2 gap-4">
-                    <Input 
-                      label="Vehicle Number" 
-                      placeholder="ABC-123" 
-                      required 
+                    <Input
+                      label="Vehicle Number"
+                      placeholder="ABC-123"
+                      required
                       value={formData.vehicle_number}
                       onChange={(e) => setFormData({ ...formData, vehicle_number: e.target.value })}
                     />
-                    <Input 
-                      label="Vehicle Type" 
-                      placeholder="Truck / Van / etc" 
-                      required 
+                    <Input
+                      label="Vehicle Type"
+                      placeholder="Truck / Van / etc"
+                      required
                       value={formData.vehicle_type}
                       onChange={(e) => setFormData({ ...formData, vehicle_type: e.target.value })}
                     />
                   </div>
-                  <Input 
-                    label="Driver Name" 
-                    placeholder="Full Name" 
-                    required 
+                  <Input
+                    label="Driver Name"
+                    placeholder="Full Name"
+                    required
                     value={formData.driver_name}
                     onChange={(e) => setFormData({ ...formData, driver_name: e.target.value })}
                   />
-                  <Input 
-                    label="Phone Number" 
-                    placeholder="1234567890" 
-                    required 
+                  <Input
+                    label="Phone Number"
+                    placeholder="1234567890"
+                    required
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   />
                   <div className="flex gap-4 pt-4">
-                    <Button variant="outline" className="flex-1" type="button" onClick={() => setShowAddModal(false)}>Cancel</Button>
-                    <Button variant="secondary" className="flex-1" type="submit">Register</Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      type="button"
+                      onClick={() => setShowAddModal(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button variant="secondary" className="flex-1" type="submit">
+                      Register
+                    </Button>
                   </div>
                 </form>
               </Card>

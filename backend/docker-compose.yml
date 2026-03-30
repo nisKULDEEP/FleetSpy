@@ -1,9 +1,9 @@
-version: '1.0'
+version: '3.8'
 
 services:
   postgres:
     image: postgis/postgis:15-3.3-alpine
-    container_name: geofence_postgres
+    container_name: fleetspy_postgres
     environment:
       POSTGRES_DB: geofence_db
       POSTGRES_USER: niskuldeep
@@ -12,7 +12,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./backend/src/migrations/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql
+      - ./src/migrations/001_init.sql:/docker-entrypoint-initdb.d/001_init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U niskuldeep -d geofence_db"]
       interval: 10s
@@ -21,25 +21,21 @@ services:
 
   backend:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
-    container_name: geofence_backend
+    container_name: fleetspy_backend
     ports:
       - "3001:3001"
     environment:
       NODE_ENV: development
       PORT: 3001
-      DB_HOST: postgres
-      DB_PORT: 5432
-      DB_NAME: geofence_db
-      DB_USER: niskuldeep
-      DB_PASSWORD: niskuldeep
-      FRONTEND_URL: http://localhost:5173
+      DATABASE_URL: postgresql://niskuldeep:niskuldeep@postgres:5432/geofence_db
+      FRONTEND_URL: ${FRONTEND_URL}
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
-      - ./backend:/app
+      - .:/app
       - /app/node_modules
 
 volumes:

@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Anton", sans-serif;
+  --font-display: "Inter", sans-serif;
 
   --color-primary: #705d00;
   --color-primary-container: #FFD700;
@@ -21,7 +21,7 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display uppercase tracking-tight;
+    @apply font-display font-bold uppercase tracking-tight;
   }
 }
 
