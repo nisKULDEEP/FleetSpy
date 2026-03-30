@@ -281,7 +281,7 @@ export const Dashboard = () => {
 
         <Card title="Tactical Map" subtitle="Sector 7 grid visualization">
 <div className="h-[400px] w-full mt-4 bg-surface-container-low relative overflow-hidden group">
-  <DashboardMap vehicles={activeUnits} geofences={geofences} />
+  <DashboardMap units={activeUnits} />
 </div>
 </Card>
       </div>

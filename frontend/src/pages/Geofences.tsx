@@ -144,7 +144,7 @@ export const Geofences = () => {
         <div className="xl:col-span-8">
           <Card className="p-0 overflow-hidden h-full min-h-[600px] flex flex-col">
 <div className="flex-1 relative bg-surface-container-low h-full min-h-[400px]">
-  <MapComponent vehicles={[]} geofences={geofences} />
+  <MapComponent geofences={geofences} onShapeCreated={() => {}} />
 </div>
 </Card>
         </div>
