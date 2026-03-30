@@ -17,13 +17,11 @@ import {
   Area,
 } from 'recharts';
 
-const data = [
-  { name: '00:00', value: 400 },
-  { name: '04:00', value: 300 },
-  { name: '08:00', value: 600 },
-  { name: '12:00', value: 800 },
-  { name: '16:00', value: 500 },
-  { name: '20:00', value: 900 },
+const chartData = [
+  { name: '00:00', value: 0 },
+  { name: '06:00', value: 0 },
+  { name: '12:00', value: 0 },
+  { name: '18:00', value: 0 },
 ];
 
 const StatCard = ({ icon: Icon, label, value, trend, color }: any) => (
@@ -51,7 +49,7 @@ const StatCard = ({ icon: Icon, label, value, trend, color }: any) => (
 
 import { cn } from '@/src/lib/utils';
 
-import { io } from 'socket.io-client';
+import { socketService } from '@/src/services/sockets/socketService';
 
 export const Dashboard = () => {
   const { data: vehicles = [], isLoading: loadingVehicles } = useGetVehiclesQuery();
@@ -77,24 +75,25 @@ export const Dashboard = () => {
     const token = localStorage.getItem('fleetspy_token');
     if (!token) return;
 
-    const socketUrl = import.meta.env.VITE_API_URL.replace(/^http/, 'ws');
-    const socket = io(`${socketUrl}/ws/alerts`, {
-      auth: { token },
-    });
+    socketService.connect();
 
-    socket.on('connect', () => {
+    const handleConnect = () => {
       console.log('Connected to FleetSpy tactical stream');
-    });
+    };
 
-    socket.on('alert', (alertData) => {
+    const handleAlert = (alertData: any) => {
       console.log('Received ALERT!', alertData);
-      setRecentAlerts((prev) => [alertData, ...prev].slice(0, 5));
-      setStats((prev) => ({ ...prev, violations: prev.violations + 1 }));
+      // setRecentAlerts((prev) => [alertData, ...prev].slice(0, 5));
+      // setStats((prev) => ({ ...prev, violations: prev.violations + 1 }));
       // Optional: you can show a toast or notification here
-    });
+    };
+
+    socketService.on('connect', handleConnect);
+    socketService.on('alert', handleAlert);
 
     return () => {
-      socket.disconnect();
+      socketService.off('connect', handleConnect);
+      socketService.off('alert', handleAlert);
     };
   }, []);
 
@@ -141,14 +140,14 @@ export const Dashboard = () => {
           icon={Truck}
           label="Fleet Utilization"
           value={`${Math.round((stats.vehicles / 30) * 100)}%`}
-          trend={12}
+          trend={0}
           color="bg-primary-container"
         />
         <StatCard
           icon={MapPin}
           label="Active Missions"
           value={stats.vehicles}
-          trend={-5}
+          trend={0}
           color="bg-surface-container-highest"
         />
         <StatCard
@@ -175,7 +174,7 @@ export const Dashboard = () => {
         >
           <div className="h-[300px] w-full mt-4">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data}>
+              <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#FFD700" stopOpacity={0.3} />
@@ -271,19 +270,16 @@ export const Dashboard = () => {
                     </p>
                   </div>
                 </div>
-                <Button variant="ghost" size="sm" className="text-[10px]">
-                  Track
-                </Button>
               </div>
             ))}
           </div>
         </Card>
 
         <Card title="Tactical Map" subtitle="Sector 7 grid visualization">
-<div className="h-[400px] w-full mt-4 bg-surface-container-low relative overflow-hidden group">
-  <DashboardMap units={activeUnits} />
-</div>
-</Card>
+          <div className="h-[400px] w-full mt-4 bg-surface-container-low relative overflow-hidden group">
+            <DashboardMap units={activeUnits} />
+          </div>
+        </Card>
       </div>
     </div>
   );

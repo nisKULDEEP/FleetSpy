@@ -16,7 +16,7 @@ export const Alerts = () => {
     e.preventDefault();
     try {
       await configureAlerts(formData).unwrap();
-      fetchAlerts();
+      
     } catch (error) {
       console.error('Failed to configure alert:', error);
     }
@@ -50,7 +50,7 @@ export const Alerts = () => {
             </p>
           </div>
           <div className="bg-surface-container-low p-4 text-right">
-            <p className="text-2xl font-display">0.4s</p>
+            <p className="text-2xl font-display">N/A</p>
             <p className="text-[10px] font-bold text-outline uppercase tracking-widest">
               Latency Avg
             </p>

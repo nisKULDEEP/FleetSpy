@@ -34,7 +34,7 @@ export const Geofences = () => {
       };
 
       await createGeofence(payload).unwrap();
-      fetchGeofences();
+      
     } catch (error) {
       console.error('Failed to create geofence:', error);
     }
@@ -92,9 +92,7 @@ export const Geofences = () => {
                     <span className="text-[10px] font-bold text-outline uppercase tracking-widest">
                       {geo.category}
                     </span>
-                    <Button variant="ghost" size="sm" className="text-[10px] p-0 h-auto">
-                      Configure
-                    </Button>
+                    
                   </div>
                 </div>
               ))}
@@ -129,10 +127,8 @@ export const Geofences = () => {
                 type="number"
                 onChange={(e) => setFormData({ ...formData, radius: parseInt(e.target.value) })}
               />
-              <div className="grid grid-cols-2 gap-3 pt-4">
-                <Button variant="outline" className="text-[10px]">
-                  Edit Shape
-                </Button>
+              <div className="pt-4 flex justify-end">
+                
                 <Button variant="secondary" className="text-[10px]" onClick={handleCreateZone}>
                   Apply Changes
                 </Button>

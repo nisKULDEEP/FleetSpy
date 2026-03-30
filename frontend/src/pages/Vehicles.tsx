@@ -64,10 +64,7 @@ export const Vehicles = () => {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-outline" />
             <Input placeholder="Search by ID, Driver, or Plate..." className="pl-12" />
           </div>
-          <Button variant="outline" className="flex items-center gap-2">
-            <Filter className="w-4 h-4" />
-            Filter
-          </Button>
+          
         </div>
 
         <div className="overflow-x-auto">
@@ -135,11 +132,7 @@ export const Vehicles = () => {
                       </span>
                     </div>
                   </td>
-                  <td className="p-4 text-right">
-                    <Button variant="ghost" size="sm" className="text-[10px]">
-                      Manage
-                    </Button>
-                  </td>
+                  
                 </tr>
               ))}
             </tbody>

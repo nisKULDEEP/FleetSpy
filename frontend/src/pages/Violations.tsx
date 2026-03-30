@@ -28,10 +28,7 @@ export const Violations = () => {
             Audit log of all security breaches, operational violations, and containment failures.
           </p>
         </div>
-        <Button variant="outline" className="flex items-center gap-2">
-          <Download className="w-4 h-4" />
-          Export Audit Log
-        </Button>
+        
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -52,7 +49,7 @@ export const Violations = () => {
               Speed Violations
             </span>
           </div>
-          <h3 className="text-3xl font-display">48</h3>
+          <h3 className="text-3xl font-display">0</h3>
           <p className="text-xs text-outline mt-1">Last 24 hours</p>
         </Card>
         <Card>
